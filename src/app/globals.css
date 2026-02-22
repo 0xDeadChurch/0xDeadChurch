@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+:root {
+  --temple-gold: #D4A847;
+  --temple-gold-light: #FFE4A0;
+  --temple-gold-dark: #B8941F;
+  --temple-purple-deep: #1a1530;
+  --temple-parchment: #fff8e6;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: #0a0604;
+  overflow-x: hidden;
+}
+
+/* ---- Keyframe animations (from prototype) ---- */
+
+@keyframes pulse-gold {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+@keyframes float-hands {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes holy-glow {
+  0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+  50% { opacity: 1; transform: translate(-50%, -50%) scale(1.08); }
+}
+
+@keyframes rays-rotate {
+  from { transform: translateX(-50%) rotate(0deg); }
+  to { transform: translateX(-50%) rotate(360deg); }
+}
+
+@keyframes cloud-drift-left {
+  from { transform: translateX(0); }
+  to { transform: translateX(-300px); }
+}
+
+@keyframes cloud-drift-right {
+  from { transform: translateX(0); }
+  to { transform: translateX(300px); }
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0.5); }
+  50% { opacity: 0.8; transform: scale(1.2); }
+}
+
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: rotate(-2deg); }
+  50% { transform: rotate(2deg); }
+}
+
+/* ---- Textarea placeholder ---- */
+
+textarea::placeholder {
+  color: rgba(255,255,255,0.25);
+  font-style: italic;
+}
+
+::selection {
+  background: rgba(212,168,71,0.3);
+  color: #fff;
+}
