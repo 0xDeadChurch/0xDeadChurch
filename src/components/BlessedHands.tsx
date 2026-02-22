@@ -109,8 +109,8 @@ export default function BlessedHands({ onClick, state }: BlessedHandsProps) {
             fontSize: "13px",
             letterSpacing: "6px",
             textTransform: "uppercase",
-            color: "rgba(212,168,71,0.8)",
-            textShadow: "0 0 20px rgba(212,168,71,0.3)",
+            color: "#D4A847",
+            textShadow: "0 0 20px rgba(212,168,71,0.5), 0 1px 3px rgba(0,0,0,0.5)",
             animation: "pulse-gold 3s ease-in-out infinite",
             whiteSpace: "nowrap",
           }}

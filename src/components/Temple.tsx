@@ -263,7 +263,18 @@ export default function Temple() {
 
           {/* COMPOSE STATE */}
           {stage === "compose" && (
-            <div style={{ textAlign: "center", width: "100%" }}>
+            <div
+              style={{
+                textAlign: "center",
+                width: "100%",
+                maxWidth: "520px",
+                background: "rgba(10,8,20,0.55)",
+                backdropFilter: "blur(20px)",
+                borderRadius: "16px",
+                border: "1px solid rgba(212,168,71,0.1)",
+                padding: "40px 24px 32px",
+              }}
+            >
               <div style={{ marginBottom: "30px" }}>
                 <BlessedHands state="open" />
               </div>

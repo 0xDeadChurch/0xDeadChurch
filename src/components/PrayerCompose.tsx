@@ -97,7 +97,7 @@ export default function PrayerCompose({
               color:
                 prayerType === type.id
                   ? "#FFE4A0"
-                  : "rgba(255,255,255,0.5)",
+                  : "rgba(255,255,255,0.7)",
               transition: "all 0.3s ease",
             }}
           >
@@ -140,7 +140,7 @@ export default function PrayerCompose({
             fontFamily: "var(--font-crimson-pro), Georgia, serif",
             fontSize: "16px",
             fontStyle: "italic",
-            color: "rgba(255,255,255,0.4)",
+            color: "rgba(255,255,255,0.6)",
             marginBottom: "20px",
           }}
         >
@@ -162,7 +162,7 @@ export default function PrayerCompose({
           style={{
             fontFamily: "var(--font-cinzel), serif",
             fontSize: "11px",
-            color: "rgba(212,168,71,0.6)",
+            color: "rgba(212,168,71,0.85)",
             letterSpacing: "2px",
           }}
         >
@@ -191,7 +191,7 @@ export default function PrayerCompose({
           style={{
             fontFamily: "var(--font-cinzel), serif",
             fontSize: "10px",
-            color: "rgba(212,168,71,0.4)",
+            color: "rgba(212,168,71,0.7)",
             letterSpacing: "1px",
           }}
         >
@@ -205,7 +205,7 @@ export default function PrayerCompose({
           textAlign: "center",
           fontFamily: "var(--font-jetbrains-mono), monospace",
           fontSize: "10px",
-          color: "rgba(255,255,255,0.2)",
+          color: "rgba(255,255,255,0.45)",
           marginBottom: "24px",
           letterSpacing: "1px",
         }}
@@ -230,7 +230,7 @@ export default function PrayerCompose({
             cursor: "pointer",
             fontFamily: "var(--font-cinzel), serif",
             fontSize: "12px",
-            color: "rgba(255,255,255,0.25)",
+            color: "rgba(255,255,255,0.45)",
             letterSpacing: "2px",
           }}
         >
