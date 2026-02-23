@@ -358,6 +358,54 @@ export default function Temple() {
               </div>
             </div>
           )}
+          {/* Footer links */}
+          <div
+            style={{
+              position: "fixed",
+              bottom: "20px",
+              left: 0,
+              right: 0,
+              display: "flex",
+              justifyContent: "center",
+              gap: "24px",
+              zIndex: 2,
+            }}
+          >
+            <a
+              href="https://x.com/0xdeadchurch"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontFamily: "var(--font-cinzel), serif",
+                fontSize: "11px",
+                letterSpacing: "2px",
+                color: "rgba(30,20,50,0.5)",
+                textDecoration: "none",
+                transition: "color 0.3s ease",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(30,20,50,0.8)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(30,20,50,0.5)")}
+            >
+              X
+            </a>
+            <a
+              href="https://github.com/0xDeadChurch"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontFamily: "var(--font-cinzel), serif",
+                fontSize: "11px",
+                letterSpacing: "2px",
+                color: "rgba(30,20,50,0.5)",
+                textDecoration: "none",
+                transition: "color 0.3s ease",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(30,20,50,0.8)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(30,20,50,0.5)")}
+            >
+              GITHUB
+            </a>
+          </div>
         </div>
       )}
     </div>
