@@ -405,6 +405,23 @@ export default function Temple() {
             >
               GITHUB
             </a>
+            <a
+              href="https://daodegen.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                fontFamily: "var(--font-cinzel), serif",
+                fontSize: "11px",
+                letterSpacing: "2px",
+                color: "rgba(30,20,50,0.5)",
+                textDecoration: "none",
+                transition: "color 0.3s ease",
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "rgba(30,20,50,0.8)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(30,20,50,0.5)")}
+            >
+              DAODEGEN
+            </a>
           </div>
         </div>
       )}
