@@ -49,19 +49,32 @@ export function middleware(req: NextRequest) {
   res.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   res.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
 
-  const rpcOrigins = process.env.NODE_ENV === "production"
-    ? "https://mainnet.unichain.org"
-    : "https://sepolia.unichain.org https://mainnet.unichain.org";
+  const connectOrigins = [
+    "'self'",
+    "https://mainnet.unichain.org",
+    "https://sepolia.unichain.org",
+    "https://*.g.alchemy.com",
+    "wss://relay.walletconnect.org",
+    "wss://relay.walletconnect.com",
+    "https://*.walletconnect.com",
+    "https://*.walletconnect.org",
+    "https://*.web3modal.org",
+    "https://*.web3modal.com",
+  ];
+
+  if (process.env.NODE_ENV !== "production") {
+    connectOrigins.push("http://localhost:*", "ws://localhost:*");
+  }
 
   res.headers.set(
     "Content-Security-Policy",
     "default-src 'self'; " +
-    "script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval'; " +
+    "script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline'; " +
     "style-src 'self' 'unsafe-inline'; " +
     "img-src 'self' data: https:; " +
     "font-src 'self' data: https://fonts.gstatic.com; " +
     "frame-ancestors 'none'; " +
-    `connect-src 'self' ${rpcOrigins} wss://relay.walletconnect.org wss://relay.walletconnect.com;`,
+    `connect-src ${connectOrigins.join(" ")};`,
   );
 
   return res;

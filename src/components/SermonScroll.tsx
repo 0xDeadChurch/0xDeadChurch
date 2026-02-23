@@ -83,7 +83,11 @@ export default function SermonScroll({ sermon, visible }: SermonScrollProps) {
             textAlign: "left",
           }}
         >
-          {sermon.content}
+          {sermon.content.split(/\n\n+/).map((para, i) => (
+            <p key={i} style={{ marginBottom: i < sermon.content.split(/\n\n+/).length - 1 ? "16px" : 0 }}>
+              {para}
+            </p>
+          ))}
         </div>
 
         {/* Verse refs */}

@@ -49,25 +49,8 @@ export default function BlessedHands({ onClick, state }: BlessedHandsProps) {
           alignItems: "center",
         }}
       >
-        {/* Left hand */}
-        <div
-          style={{
-            fontSize: isOpen ? "100px" : "160px",
-            lineHeight: 1,
-            transform: isOpen
-              ? "scaleX(-1) rotate(30deg) translateX(60px)"
-              : "scaleX(1) rotate(0deg) translateX(0)",
-            transition: "all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)",
-            filter: `drop-shadow(0 0 ${hover ? "40px" : "20px"} rgba(255,200,100,0.4))`,
-            opacity: isOpen ? 0.7 : 1,
-            userSelect: "none",
-          }}
-        >
-          {isOpen ? "\u{1F932}" : ""}
-        </div>
-
-        {/* Combined hands (shown when closed) */}
-        {!isOpen && (
+        {/* Prayer hands (closed) or three open palms */}
+        {!isOpen ? (
           <div
             style={{
               fontSize: "160px",
@@ -79,24 +62,23 @@ export default function BlessedHands({ onClick, state }: BlessedHandsProps) {
           >
             {"\u{1F64F}"}
           </div>
+        ) : (
+          <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                style={{
+                  fontSize: "72px",
+                  lineHeight: 1,
+                  filter: `drop-shadow(0 0 20px rgba(255,200,100,0.4))`,
+                  userSelect: "none",
+                }}
+              >
+                {"\u{1F932}"}
+              </div>
+            ))}
+          </div>
         )}
-
-        {/* Right hand */}
-        <div
-          style={{
-            fontSize: isOpen ? "100px" : "160px",
-            lineHeight: 1,
-            transform: isOpen
-              ? "rotate(-30deg) translateX(-60px)"
-              : "scaleX(1) rotate(0deg) translateX(0)",
-            transition: "all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)",
-            filter: `drop-shadow(0 0 ${hover ? "40px" : "20px"} rgba(255,200,100,0.4))`,
-            opacity: isOpen ? 0.7 : 0,
-            userSelect: "none",
-          }}
-        >
-          {isOpen ? "\u{1F932}" : ""}
-        </div>
       </div>
 
       {/* "Click to pray" text under hands */}
@@ -106,11 +88,11 @@ export default function BlessedHands({ onClick, state }: BlessedHandsProps) {
             position: "absolute",
             bottom: "-50px",
             fontFamily: "var(--font-cinzel), serif",
-            fontSize: "13px",
+            fontSize: "16px",
             letterSpacing: "6px",
             textTransform: "uppercase",
-            color: "#D4A847",
-            textShadow: "0 0 20px rgba(212,168,71,0.5), 0 1px 3px rgba(0,0,0,0.5)",
+            color: "#FFE4A0",
+            textShadow: "0 0 24px rgba(212,168,71,0.7), 0 2px 8px rgba(0,0,0,0.8)",
             animation: "pulse-gold 3s ease-in-out infinite",
             whiteSpace: "nowrap",
           }}

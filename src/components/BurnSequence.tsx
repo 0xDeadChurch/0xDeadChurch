@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
 import { parseUnits, encodePacked, type Hex } from "viem";
 import { PRAYER_BURN, DAODEGEN_TOKEN, UNICHAIN_ID } from "@/lib/contracts";
@@ -27,6 +27,14 @@ export default function BurnSequence({
   const [phase, setPhase] = useState<BurnPhase>("idle");
   const [progress, setProgress] = useState(0);
   const [statusText, setStatusText] = useState("");
+
+  // Refs for callback stability
+  const onSermonRef = useRef(onSermon);
+  onSermonRef.current = onSermon;
+  const onErrorRef = useRef(onError);
+  onErrorRef.current = onError;
+  const started = useRef(false);
+  const sermonRequested = useRef(false);
 
   const burnAmountWei = parseUnits(prayer.burnAmount, 18);
   const messageBytes = prayer.message
@@ -67,11 +75,13 @@ export default function BurnSequence({
     chainId: UNICHAIN_ID,
   });
 
-  // Start the flow
+  // Start the flow -- runs once when allowance is loaded
   useEffect(() => {
-    if (phase !== "idle") return;
-    const needsApproval =
-      currentAllowance !== undefined && currentAllowance < burnAmountWei;
+    if (phase !== "idle" || started.current) return;
+    if (currentAllowance === undefined) return;
+
+    started.current = true;
+    const needsApproval = currentAllowance < burnAmountWei;
 
     if (needsApproval) {
       setPhase("approving");
@@ -83,7 +93,7 @@ export default function BurnSequence({
         args: [PRAYER_BURN.address, burnAmountWei],
         chainId: UNICHAIN_ID,
       });
-    } else if (currentAllowance !== undefined) {
+    } else {
       setPhase("praying");
       setStatusText("burning offering...");
       writePray({
@@ -94,7 +104,8 @@ export default function BurnSequence({
         chainId: UNICHAIN_ID,
       });
     }
-  }, [phase, currentAllowance, burnAmountWei, messageBytes, writeApprove, writePray]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentAllowance]);
 
   // After approval, send pray tx
   useEffect(() => {
@@ -109,11 +120,15 @@ export default function BurnSequence({
         chainId: UNICHAIN_ID,
       });
     }
-  }, [phase, approveConfirmed, burnAmountWei, messageBytes, writePray]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [approveConfirmed]);
 
   // After pray confirms, request sermon
   useEffect(() => {
     if (phase !== "praying" || !prayConfirmed || !prayTxHash || !address) return;
+    if (sermonRequested.current) return;
+    sermonRequested.current = true;
+
     setPhase("waiting-sermon");
     setStatusText("the pastor reads...");
 
@@ -125,33 +140,33 @@ export default function BurnSequence({
       prayer_type: prayer.prayerType,
       burn_amount: prayer.burnAmount,
     }, jwtRef.current || "").then((sermon) => {
-      // Minimum ritual pause of 3s from when this phase started
       const elapsed = Date.now() - start;
       const remaining = Math.max(0, 3000 - elapsed);
       setTimeout(() => {
         setPhase("done");
-        onSermon(sermon);
+        onSermonRef.current(sermon);
       }, remaining);
     }).catch((err) => {
       setPhase("error");
-      onError(err instanceof Error ? err.message : "Sermon request failed");
+      onErrorRef.current(err instanceof Error ? err.message : "Sermon request failed");
     });
-  }, [phase, prayConfirmed, prayTxHash, address, prayer, jwtRef, onSermon, onError]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prayConfirmed, prayTxHash]);
 
   // Handle errors from write hooks
   useEffect(() => {
     if (approveError) {
       setPhase("error");
-      onError(approveError.message.split("\n")[0]);
+      onErrorRef.current(approveError.message.split("\n")[0]);
     }
-  }, [approveError, onError]);
+  }, [approveError]);
 
   useEffect(() => {
     if (prayError) {
       setPhase("error");
-      onError(prayError.message.split("\n")[0]);
+      onErrorRef.current(prayError.message.split("\n")[0]);
     }
-  }, [prayError, onError]);
+  }, [prayError]);
 
   // Fire animation progress
   useEffect(() => {

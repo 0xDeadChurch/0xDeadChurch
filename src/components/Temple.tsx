@@ -30,6 +30,7 @@ export default function Temple() {
   const [authenticating, setAuthenticating] = useState(false);
 
   const jwtRef = useRef<string | null>(null);
+  const authingRef = useRef(false);
   const { address, isConnected, chainId } = useAccount();
   const { signMessageAsync } = useSignMessage();
 
@@ -90,16 +91,15 @@ export default function Temple() {
 
   // SIWE auto-auth on wallet connect
   useEffect(() => {
-    if (!isConnected || !address || jwtRef.current || authenticating) return;
+    if (!isConnected || !address || jwtRef.current || authingRef.current) return;
     if (chainId !== UNICHAIN_ID) return;
 
-    let cancelled = false;
+    authingRef.current = true;
     setAuthenticating(true);
 
     (async () => {
       try {
         const nonce = await fetchNonce();
-        if (cancelled) return;
 
         const siweMessage = new SiweMessage({
           domain: DOMAIN,
@@ -113,23 +113,18 @@ export default function Temple() {
 
         const messageStr = siweMessage.prepareMessage();
         const signature = await signMessageAsync({ message: messageStr });
-        if (cancelled) return;
 
         const token = await verifyAuth(messageStr, signature);
-        if (cancelled) return;
-
         jwtRef.current = token;
-      } catch {
-        // Auth failure is non-fatal -- user can still browse, just can't get sermons
+      } catch (err) {
+        console.warn("[SIWE auth]", err instanceof Error ? err.message : err);
       } finally {
-        if (!cancelled) setAuthenticating(false);
+        authingRef.current = false;
+        setAuthenticating(false);
       }
     })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [isConnected, address, chainId, signMessageAsync, authenticating]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isConnected, address, chainId]);
 
   // Clear JWT on disconnect
   useEffect(() => {
@@ -155,10 +150,42 @@ export default function Temple() {
     setErrorMsg(null);
   }, []);
 
-  const handleSubmit = useCallback((p: PrayerSubmission) => {
+  // Ensure we have a JWT before burning -- triggers SIWE if needed
+  const ensureAuth = useCallback(async (): Promise<boolean> => {
+    if (jwtRef.current) return true;
+    if (!address) return false;
+
+    try {
+      const nonce = await fetchNonce();
+      const siweMessage = new SiweMessage({
+        domain: DOMAIN,
+        address,
+        statement: "Burn tokens. Receive sermons.",
+        uri: SITE_URL,
+        version: "1",
+        chainId: UNICHAIN_ID,
+        nonce,
+      });
+      const messageStr = siweMessage.prepareMessage();
+      const signature = await signMessageAsync({ message: messageStr });
+      const token = await verifyAuth(messageStr, signature);
+      jwtRef.current = token;
+      return true;
+    } catch (err) {
+      console.warn("[SIWE auth]", err instanceof Error ? err.message : err);
+      return false;
+    }
+  }, [address, signMessageAsync]);
+
+  const handleSubmit = useCallback(async (p: PrayerSubmission) => {
+    const authed = await ensureAuth();
+    if (!authed) {
+      setErrorMsg("Please sign the authentication message to continue.");
+      return;
+    }
     setPrayer(p);
     setStage("burning");
-  }, []);
+  }, [ensureAuth]);
 
   const handleSermon = useCallback((s: Sermon) => {
     setSermon(s);
@@ -208,26 +235,7 @@ export default function Temple() {
             transition: "opacity 1s ease",
           }}
         >
-          {/* Header */}
-          <div
-            style={{
-              position: "fixed",
-              top: "24px",
-              textAlign: "center",
-              zIndex: 10,
-            }}
-          >
-            <div
-              style={{
-                fontFamily: "var(--font-jetbrains-mono), monospace",
-                fontSize: "10px",
-                letterSpacing: "5px",
-                color: "rgba(255,255,255,0.3)",
-              }}
-            >
-              0xdead.church
-            </div>
-          </div>
+          {/* Header -- reserved for future nav */}
 
           {/* HANDS STATE */}
           {stage === "hands" && (
@@ -244,7 +252,7 @@ export default function Temple() {
                   letterSpacing: "3px",
                 }}
               >
-                Dao DeGen
+                0xDead.Church
               </div>
 
               {needsWallet || wrongChain ? (
