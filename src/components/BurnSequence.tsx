@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useReadContract } from "wagmi";
+import { useAccount, useWriteContract, useReadContract, useConfig } from "wagmi";
+import { waitForTransactionReceipt } from "@wagmi/core";
 import { parseUnits, encodePacked, type Hex } from "viem";
 import { PRAYER_BURN, DAODEGEN_TOKEN, UNICHAIN_ID } from "@/lib/contracts";
 import { requestSermon } from "@/lib/api";
@@ -24,6 +25,7 @@ export default function BurnSequence({
   onError,
 }: BurnSequenceProps) {
   const { address } = useAccount();
+  const config = useConfig();
   const [phase, setPhase] = useState<BurnPhase>("idle");
   const [progress, setProgress] = useState(0);
   const [statusText, setStatusText] = useState("");
@@ -34,7 +36,6 @@ export default function BurnSequence({
   const onErrorRef = useRef(onError);
   onErrorRef.current = onError;
   const started = useRef(false);
-  const sermonRequested = useRef(false);
 
   const burnAmountWei = parseUnits(prayer.burnAmount, 18);
   const messageBytes = prayer.message
@@ -51,122 +52,76 @@ export default function BurnSequence({
     query: { enabled: !!address },
   });
 
-  // Approve tx
-  const {
-    writeContract: writeApprove,
-    data: approveTxHash,
-    error: approveError,
-  } = useWriteContract();
+  const { writeContractAsync } = useWriteContract();
 
-  const { isSuccess: approveConfirmed } = useWaitForTransactionReceipt({
-    hash: approveTxHash,
-    chainId: UNICHAIN_ID,
-  });
-
-  // Pray tx
-  const {
-    writeContract: writePray,
-    data: prayTxHash,
-    error: prayError,
-  } = useWriteContract();
-
-  const { isSuccess: prayConfirmed } = useWaitForTransactionReceipt({
-    hash: prayTxHash,
-    chainId: UNICHAIN_ID,
-  });
-
-  // Start the flow -- runs once when allowance is loaded
+  // Single sequential flow -- approve (if needed) -> pray -> wait -> sermon
   useEffect(() => {
-    if (phase !== "idle" || started.current) return;
-    if (currentAllowance === undefined) return;
-
+    if (started.current) return;
+    if (currentAllowance === undefined || !address) return;
     started.current = true;
-    const needsApproval = currentAllowance < burnAmountWei;
 
-    if (needsApproval) {
-      setPhase("approving");
-      setStatusText("approving offering...");
-      writeApprove({
-        address: DAODEGEN_TOKEN.address,
-        abi: DAODEGEN_TOKEN.abi,
-        functionName: "approve",
-        args: [PRAYER_BURN.address, burnAmountWei],
-        chainId: UNICHAIN_ID,
-      });
-    } else {
-      setPhase("praying");
-      setStatusText("burning offering...");
-      writePray({
-        address: PRAYER_BURN.address,
-        abi: PRAYER_BURN.abi,
-        functionName: "pray",
-        args: [burnAmountWei, messageBytes],
-        chainId: UNICHAIN_ID,
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentAllowance]);
+    (async () => {
+      try {
+        const needsApproval = currentAllowance < burnAmountWei;
 
-  // After approval, send pray tx
-  useEffect(() => {
-    if (phase === "approving" && approveConfirmed) {
-      setPhase("praying");
-      setStatusText("burning offering...");
-      writePray({
-        address: PRAYER_BURN.address,
-        abi: PRAYER_BURN.abi,
-        functionName: "pray",
-        args: [burnAmountWei, messageBytes],
-        chainId: UNICHAIN_ID,
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [approveConfirmed]);
+        if (needsApproval) {
+          setPhase("approving");
+          setStatusText("approving offering...");
+          const approveTx = await writeContractAsync({
+            address: DAODEGEN_TOKEN.address,
+            abi: DAODEGEN_TOKEN.abi,
+            functionName: "approve",
+            args: [PRAYER_BURN.address, burnAmountWei],
+            chainId: UNICHAIN_ID,
+          });
+          await waitForTransactionReceipt(config, {
+            hash: approveTx,
+            chainId: UNICHAIN_ID,
+          });
+        }
 
-  // After pray confirms, request sermon
-  useEffect(() => {
-    if (phase !== "praying" || !prayConfirmed || !prayTxHash || !address) return;
-    if (sermonRequested.current) return;
-    sermonRequested.current = true;
+        setPhase("praying");
+        setStatusText("burning offering...");
+        const prayTx = await writeContractAsync({
+          address: PRAYER_BURN.address,
+          abi: PRAYER_BURN.abi,
+          functionName: "pray",
+          args: [burnAmountWei, messageBytes],
+          chainId: UNICHAIN_ID,
+        });
+        await waitForTransactionReceipt(config, {
+          hash: prayTx,
+          chainId: UNICHAIN_ID,
+        });
 
-    setPhase("waiting-sermon");
-    setStatusText("the pastor reads...");
+        setPhase("waiting-sermon");
+        setStatusText("the pastor reads...");
+        const sermonStart = Date.now();
+        const sermon = await requestSermon({
+          prayer_tx: prayTx,
+          message: prayer.message,
+          sender: address,
+          prayer_type: prayer.prayerType,
+          burn_amount: prayer.burnAmount,
+        }, jwtRef.current || "");
 
-    const start = Date.now();
-    requestSermon({
-      prayer_tx: prayTxHash,
-      message: prayer.message,
-      sender: address,
-      prayer_type: prayer.prayerType,
-      burn_amount: prayer.burnAmount,
-    }, jwtRef.current || "").then((sermon) => {
-      const elapsed = Date.now() - start;
-      const remaining = Math.max(0, 3000 - elapsed);
-      setTimeout(() => {
+        // Ensure minimum display time for the waiting phase
+        const elapsed = Date.now() - sermonStart;
+        const remaining = Math.max(0, 3000 - elapsed);
+        if (remaining > 0) {
+          await new Promise((r) => setTimeout(r, remaining));
+        }
+
         setPhase("done");
         onSermonRef.current(sermon);
-      }, remaining);
-    }).catch((err) => {
-      setPhase("error");
-      onErrorRef.current(err instanceof Error ? err.message : "Sermon request failed");
-    });
+      } catch (err) {
+        setPhase("error");
+        const msg = err instanceof Error ? err.message.split("\n")[0] : "Something went wrong";
+        onErrorRef.current(msg);
+      }
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prayConfirmed, prayTxHash]);
-
-  // Handle errors from write hooks
-  useEffect(() => {
-    if (approveError) {
-      setPhase("error");
-      onErrorRef.current(approveError.message.split("\n")[0]);
-    }
-  }, [approveError]);
-
-  useEffect(() => {
-    if (prayError) {
-      setPhase("error");
-      onErrorRef.current(prayError.message.split("\n")[0]);
-    }
-  }, [prayError]);
+  }, [currentAllowance, address]);
 
   // Fire animation progress
   useEffect(() => {

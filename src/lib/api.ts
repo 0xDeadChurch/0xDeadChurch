@@ -47,7 +47,17 @@ export async function requestSermon(
     throw new Error(data.error || "Sermon request failed");
   }
   const data = await res.json();
-  return data.sermon;
+  const raw = data.sermon;
+  // Map daodegen API shape (verse_references: number[]) to our Sermon type (verse_refs: VerseRef[])
+  return {
+    content: raw.content || "",
+    verse_refs: (raw.verse_references || []).map((id: number) => ({
+      id,
+      fragment: `Verse ${id}`,
+    })),
+    sentiment_tag: raw.sentiment_tag,
+    response_type: raw.response_type,
+  } as Sermon;
 }
 
 export async function fetchCongregation(): Promise<CongregationState> {

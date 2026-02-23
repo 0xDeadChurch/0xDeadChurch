@@ -11,6 +11,7 @@ export interface Sermon {
   content: string;
   verse_refs: VerseRef[];
   sentiment_tag?: string;
+  response_type?: "full" | "sparse" | "verse_only" | "silence";
 }
 
 export interface CongregationState {

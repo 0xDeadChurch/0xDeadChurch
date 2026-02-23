@@ -21,6 +21,8 @@ export default function SermonScroll({ sermon, visible }: SermonScrollProps) {
 
   if (!sermon) return null;
 
+  const isSilence = !sermon.content || sermon.response_type === "silence";
+
   return (
     <div
       style={{
@@ -70,7 +72,7 @@ export default function SermonScroll({ sermon, visible }: SermonScrollProps) {
             color: "#B8941F",
           }}
         >
-          the pastor speaks
+          {isSilence ? "the pastor listens" : "the pastor speaks"}
         </div>
 
         {/* Sermon text */}
@@ -80,14 +82,20 @@ export default function SermonScroll({ sermon, visible }: SermonScrollProps) {
             fontSize: "17px",
             lineHeight: 1.85,
             color: "#2a2218",
-            textAlign: "left",
+            textAlign: isSilence ? "center" : "left",
           }}
         >
-          {sermon.content.split(/\n\n+/).map((para, i) => (
-            <p key={i} style={{ marginBottom: i < sermon.content.split(/\n\n+/).length - 1 ? "16px" : 0 }}>
-              {para}
+          {isSilence ? (
+            <p style={{ fontStyle: "italic", color: "#8a7a5a" }}>
+              Your silence was received. Not all offerings require words.
             </p>
-          ))}
+          ) : (
+            sermon.content.split(/\n\n+/).map((para, i) => (
+              <p key={i} style={{ marginBottom: i < sermon.content.split(/\n\n+/).length - 1 ? "16px" : 0 }}>
+                {para}
+              </p>
+            ))
+          )}
         </div>
 
         {/* Verse refs */}
@@ -97,6 +105,7 @@ export default function SermonScroll({ sermon, visible }: SermonScrollProps) {
               marginTop: "24px",
               paddingTop: "16px",
               borderTop: "1px solid rgba(180,160,130,0.2)",
+              textAlign: "center",
             }}
           >
             {sermon.verse_refs.map((v) => (
@@ -106,16 +115,16 @@ export default function SermonScroll({ sermon, visible }: SermonScrollProps) {
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
-                  display: "block",
+                  display: "inline-block",
                   fontFamily: "var(--font-crimson-pro), Georgia, serif",
                   fontSize: "13px",
                   fontStyle: "italic",
                   color: "#8a7a5a",
-                  marginBottom: "4px",
+                  marginRight: "12px",
                   textDecoration: "none",
                 }}
               >
-                Verse {v.id} -- {v.fragment}
+                Verse {v.id}
               </a>
             ))}
           </div>

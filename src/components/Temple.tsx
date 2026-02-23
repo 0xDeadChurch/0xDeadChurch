@@ -28,6 +28,7 @@ export default function Temple() {
   const [prayer, setPrayer] = useState<PrayerSubmission | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [authenticating, setAuthenticating] = useState(false);
+  const [burnKey, setBurnKey] = useState(0);
 
   const jwtRef = useRef<string | null>(null);
   const authingRef = useRef(false);
@@ -51,7 +52,7 @@ export default function Temple() {
     query: { enabled: PRAYER_BURN.address !== "0x" },
   });
 
-  const { data: lastPrayerRaw } = useReadContract({
+  const { data: lastPrayerRaw, refetch: refetchLastPrayer } = useReadContract({
     address: PRAYER_BURN.address,
     abi: PRAYER_BURN.abi,
     functionName: "lastPrayer",
@@ -60,7 +61,7 @@ export default function Temple() {
     query: { enabled: !!address && PRAYER_BURN.address !== "0x" },
   });
 
-  const { data: balanceRaw } = useReadContract({
+  const { data: balanceRaw, refetch: refetchBalance } = useReadContract({
     address: DAODEGEN_TOKEN.address,
     abi: DAODEGEN_TOKEN.abi,
     functionName: "balanceOf",
@@ -184,13 +185,17 @@ export default function Temple() {
       return;
     }
     setPrayer(p);
+    setBurnKey((k) => k + 1);
     setStage("burning");
   }, [ensureAuth]);
 
   const handleSermon = useCallback((s: Sermon) => {
     setSermon(s);
     setStage("sermon");
-  }, []);
+    // Refetch on-chain state so cooldown timer and balance are accurate
+    refetchLastPrayer();
+    refetchBalance();
+  }, [refetchLastPrayer, refetchBalance]);
 
   const handleBurnError = useCallback((msg: string) => {
     setErrorMsg(msg);
@@ -311,6 +316,7 @@ export default function Temple() {
           {/* BURNING STATE */}
           {stage === "burning" && prayer && (
             <BurnSequence
+              key={burnKey}
               prayer={prayer}
               jwtRef={jwtRef}
               onSermon={handleSermon}
