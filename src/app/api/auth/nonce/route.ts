@@ -9,7 +9,8 @@ export async function GET() {
     });
     const data = await res.json();
     return NextResponse.json(data, { status: res.status });
-  } catch {
+  } catch (err) {
+    console.error("[auth/nonce proxy]", err instanceof Error ? err.message : err);
     return NextResponse.json(
       { error: "Service unavailable" },
       { status: 502 },

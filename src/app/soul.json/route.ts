@@ -21,7 +21,7 @@ export async function GET() {
         pray: {
           type: "contract",
           chain: "unichain",
-          chainId: 130,
+          chainId: Number(process.env.NEXT_PUBLIC_CHAIN_ID || "130"),
           address: PRAYER_BURN_ADDRESS,
           function: "pray(uint256,bytes)",
           description:

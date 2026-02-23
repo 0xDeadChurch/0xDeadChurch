@@ -36,8 +36,16 @@ const unichain = {
 
 export const config = getDefaultConfig({
   appName: "0xdead.church",
-  projectId:
-    process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID || "demo-project-id",
+  projectId: (() => {
+    const id = process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID;
+    if (!id || id === "demo-project-id") {
+      if (typeof window !== "undefined") {
+        console.warn("NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID not set -- wallet connections will fail");
+      }
+      return "demo-project-id";
+    }
+    return id;
+  })(),
   chains: [unichain],
   transports: {
     [unichain.id]: http(unichainRpc),

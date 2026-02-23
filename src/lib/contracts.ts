@@ -3,7 +3,11 @@ export const UNICHAIN_ID = Number(
 ) as 130 | 1301;
 
 export const PRAYER_BURN = {
-  address: (process.env.NEXT_PUBLIC_PRAYER_BURN_ADDRESS || "0x") as `0x${string}`,
+  address: (() => {
+    const addr = process.env.NEXT_PUBLIC_PRAYER_BURN_ADDRESS;
+    if (!addr || addr === "0x") throw new Error("NEXT_PUBLIC_PRAYER_BURN_ADDRESS must be set");
+    return addr as `0x${string}`;
+  })(),
   abi: [
     {
       type: "function",

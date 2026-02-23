@@ -46,10 +46,27 @@ export function middleware(req: NextRequest) {
   res.headers.set("X-Content-Type-Options", "nosniff");
   res.headers.set("X-Frame-Options", "DENY");
   res.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+  res.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+
+  const rpcOrigins = process.env.NODE_ENV === "production"
+    ? "https://mainnet.unichain.org"
+    : "https://sepolia.unichain.org https://mainnet.unichain.org";
+
+  res.headers.set(
+    "Content-Security-Policy",
+    "default-src 'self'; " +
+    "script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval'; " +
+    "style-src 'self' 'unsafe-inline'; " +
+    "img-src 'self' data: https:; " +
+    "font-src 'self' data: https://fonts.gstatic.com; " +
+    "frame-ancestors 'none'; " +
+    `connect-src 'self' ${rpcOrigins} wss://relay.walletconnect.org wss://relay.walletconnect.com;`,
+  );
 
   return res;
 }
 
 export const config = {
-  matcher: ["/api/:path*", "/soul.json", "/.well-known/:path*"],
+  matcher: ["/api/:path*", "/soul.json", "/.well-known/:path*", "/"],
 };
