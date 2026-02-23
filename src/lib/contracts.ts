@@ -1,4 +1,6 @@
-export const UNICHAIN_ID = 130 as const;
+export const UNICHAIN_ID = Number(
+  process.env.NEXT_PUBLIC_CHAIN_ID || "130",
+) as 130 | 1301;
 
 export const PRAYER_BURN = {
   address: (process.env.NEXT_PUBLIC_PRAYER_BURN_ADDRESS || "0x") as `0x${string}`,

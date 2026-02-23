@@ -1,12 +1,18 @@
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import { http } from "wagmi";
 
+const chainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID || "130");
+const isTestnet = chainId === 1301;
+
 const unichainRpc =
-  process.env.NEXT_PUBLIC_UNICHAIN_RPC || "https://mainnet.unichain.org";
+  process.env.NEXT_PUBLIC_UNICHAIN_RPC ||
+  (isTestnet
+    ? "https://sepolia.unichain.org"
+    : "https://mainnet.unichain.org");
 
 const unichain = {
-  id: 130,
-  name: "Unichain",
+  id: chainId,
+  name: isTestnet ? "Unichain Sepolia" : "Unichain",
   nativeCurrency: {
     decimals: 18,
     name: "Ether",
@@ -18,9 +24,14 @@ const unichain = {
     },
   },
   blockExplorers: {
-    default: { name: "UnichainScan", url: "https://unichains.org" },
+    default: {
+      name: "UnichainScan",
+      url: isTestnet
+        ? "https://sepolia.uniscan.xyz"
+        : "https://unichains.org",
+    },
   },
-  testnet: false,
+  testnet: isTestnet,
 } as const;
 
 export const config = getDefaultConfig({
