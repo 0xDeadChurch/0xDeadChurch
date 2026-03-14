@@ -69,12 +69,12 @@ export function middleware(req: NextRequest) {
   res.headers.set(
     "Content-Security-Policy",
     "default-src 'self'; " +
-    "script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline'; " +
+    "script-src 'self' 'unsafe-eval' 'wasm-unsafe-eval' 'unsafe-inline' https://www.googletagmanager.com; " +
     "style-src 'self' 'unsafe-inline'; " +
     "img-src 'self' data: https:; " +
     "font-src 'self' data: https://fonts.gstatic.com; " +
     "frame-ancestors 'none'; " +
-    `connect-src ${connectOrigins.join(" ")};`,
+    `connect-src ${connectOrigins.join(" ")} https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com;`,
   );
 
   return res;

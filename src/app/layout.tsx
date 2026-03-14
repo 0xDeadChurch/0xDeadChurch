@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Cinzel, Cinzel_Decorative, Crimson_Pro, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
@@ -66,6 +67,13 @@ export default function RootLayout({
       <body
         className={`${cinzel.variable} ${cinzelDecorative.variable} ${crimsonPro.variable} ${jetbrainsMono.variable}`}
       >
+        <Script src="https://www.googletagmanager.com/gtag/js?id=G-328GDLFR3X" strategy="afterInteractive" />
+        <Script id="gtag-init" strategy="afterInteractive">
+          {`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-328GDLFR3X');`}
+        </Script>
         {children}
       </body>
     </html>
